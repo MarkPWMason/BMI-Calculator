@@ -29,25 +29,27 @@ const BmiCalc = ({
   overWeightMessage,
   obeseMessage,
   defaultMeasurementType,
+  imperialHeightMeasurementType,
+  imperialWeightMeasurementType,
 }: {
   weightLevelMessageEnabled: boolean;
   styleCalcSum?: any;
   styleWeightMessage?: any;
   styleCalcTitle?: any;
   styleCalcContent?: any;
-  heightStepCount: string;
-  metricHeightMax: string;
-  metricHeightMin: string;
-  imperialHeightMax: string;
-  imperialHeightMin: string;
+  heightStepCount: number;
+  metricHeightMax: number;
+  metricHeightMin: number;
+  imperialHeightMax: number;
+  imperialHeightMin: number;
   styleHeightSlider?: any;
   styleHeightSliderTitleNum?: any;
   styleHeightSliderTitle?: any;
-  weightStepCount: string;
-  metricWeightMax: string;
-  metricWeightMin: string;
-  imperialWeightMax: string;
-  imperialWeightMin: string;
+  weightStepCount: number;
+  metricWeightMax: number;
+  metricWeightMin: number;
+  imperialWeightMax: number;
+  imperialWeightMin: number;
   styleWeightSlider?: any;
   styleWeightSliderTitleNum?: any;
   styleWeightSliderTitle?: any;
@@ -56,6 +58,8 @@ const BmiCalc = ({
   overWeightMessage: string;
   obeseMessage: string;
   defaultMeasurementType: string;
+  imperialHeightMeasurementType: string;
+  imperialWeightMeasurementType: string;
 }) => {
   const weightRef = useRef<HTMLInputElement>(null);
   const heightRef = useRef<HTMLInputElement>(null);
@@ -64,21 +68,21 @@ const BmiCalc = ({
 
   const [weight, setWeight] = useState(metricWeightMin);
   const [height, setheight] = useState(metricHeightMin);
-  const [measurementType, setMeasurementType] = useState(defaultMeasurementType);
+  const [measurementType, setMeasurementType] = useState(
+    defaultMeasurementType
+  );
 
   const calculationMetric = () => {
-    const weightNum = parseInt(weight);
-    const heightNum = parseInt(height) / 100;
-    return parseFloat((weightNum / (heightNum * heightNum)).toFixed(1));
+    const heightNum = height / 100;
+    return parseFloat((weight / (heightNum * heightNum)).toFixed(1));
   };
 
   const calculationImperial = () => {
-    const weightNum = parseInt(weight);
-    const heightNum = parseInt(height);
-    return parseFloat(((weightNum / (heightNum * heightNum)) * 703).toFixed(1));
+    return parseFloat(((weight / (height * height)) * 703).toFixed(1));
   };
 
-  const calc = measurementType === 'metric' ? calculationMetric() : calculationImperial();
+  const calc =
+    measurementType === 'metric' ? calculationMetric() : calculationImperial();
 
   let weightLevel = '';
   if (calc < 18.5) {
@@ -93,31 +97,49 @@ const BmiCalc = ({
 
   const weightHandler = () => {
     if (weightRef.current != null && measurementRef.current != null) {
-      setWeight(weightRef.current.value);
+      setWeight(parseInt(weightRef.current.value));
     }
   };
 
   const heightHandler = () => {
     if (heightRef.current != null) {
-      setheight(heightRef.current.value);
+      setheight(parseInt(heightRef.current.value));
     }
   };
 
   const measurementMetricHandler = () => {
     if (measurementRef.current != null) {
-        console.log(measurementRef.current.value);
-        setMeasurementType('metric')
-        setWeight(metricWeightMin);
-        setheight(metricHeightMin);
+      console.log(measurementRef.current.value);
+      setMeasurementType('metric');
+      setWeight(metricWeightMin);
+      setheight(metricHeightMin);
     }
   };
 
   const measurementImperialHandler = () => {
     if (measurementRef.current != null) {
-        setMeasurementType('imperial')
-        setWeight(imperialWeightMin);
-        setheight(imperialHeightMin);
+      setMeasurementType('imperial');
+      setWeight(imperialWeightMin);
+      setheight(imperialHeightMin);
     }
+  };
+
+  const convertToFeet = () => {
+    let feet = Math.floor(height / 12);
+    let inches = height - feet * 12;
+    if (inches === 0) {
+      return feet + 'ft';
+    }
+    return feet + 'ft ' + inches + 'in';
+  };
+
+  const convertToStones = () => {
+    let stones = Math.floor(weight / 14);
+    let pounds = weight - stones * 14;
+    if (pounds === 0) {
+      return stones + ' st';
+    }
+    return stones + ' st ' + pounds + ' lbs';
   };
 
   return (
@@ -158,7 +180,12 @@ const BmiCalc = ({
               style={styleWeightSliderTitleNum}
               htmlFor="weight"
             >
-              {weight} {measurementType === 'metric' ? 'kg' : 'lb'}
+              {measurementType === 'metric'
+                ? weight
+                : imperialWeightMeasurementType === 'stone'
+                ? convertToStones()
+                : weight + ' lbs'}{' '}
+              {measurementType === 'metric' ? 'kg' : ''}
             </label>
           </div>
           <input
@@ -166,8 +193,12 @@ const BmiCalc = ({
             style={styleWeightSlider}
             type="range"
             id="weight"
-            min={measurementType === 'metric' ? metricWeightMin : imperialWeightMin}
-            max={measurementType === 'metric' ? metricWeightMax : imperialWeightMax}
+            min={
+              measurementType === 'metric' ? metricWeightMin : imperialWeightMin
+            }
+            max={
+              measurementType === 'metric' ? metricWeightMax : imperialWeightMax
+            }
             step={weightStepCount}
             value={weight}
             ref={weightRef}
@@ -188,7 +219,12 @@ const BmiCalc = ({
               style={styleHeightSliderTitleNum}
               htmlFor="height"
             >
-              {height} {measurementType === 'metric' ? 'cm' : 'in'}
+              {measurementType === 'metric'
+                ? height
+                : imperialHeightMeasurementType === 'feet'
+                ? convertToFeet()
+                : height + ' in'}{' '}
+              {measurementType === 'metric' ? 'cm' : ''}
             </label>
           </div>
           <input
@@ -198,8 +234,12 @@ const BmiCalc = ({
             id="height"
             value={height}
             ref={heightRef}
-            min={measurementType === 'metric' ? metricHeightMin : imperialHeightMin}
-            max={measurementType === 'metric' ? metricHeightMax : imperialHeightMax}
+            min={
+              measurementType === 'metric' ? metricHeightMin : imperialHeightMin
+            }
+            max={
+              measurementType === 'metric' ? metricHeightMax : imperialHeightMax
+            }
             step={heightStepCount}
             onChange={heightHandler}
           />
